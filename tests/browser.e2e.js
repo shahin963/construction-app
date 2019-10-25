@@ -14,10 +14,10 @@ describe('e2e test', () => {
 	});
 
 	describe('Input validation', () => {
-		xtest('should display warining for Negative or zero input', async () => {
+		test('should display warining for Negative or zero input', async () => {
 			await navigate();
 			expect(await elemntVisible('roomLengthWarning')).toBeFalsy();
-			await setInputValue('roomLength', -500);
+			await keyBoardTypeInputValue('roomLength', -500);
 			expect(await getNumberInputValue('roomLength')).toBe(-500);
 			expect(await elemntVisible('roomLengthWarning')).toBeTruthy();
 		});
@@ -39,8 +39,17 @@ describe('e2e test', () => {
 		test('should not accept a zero input', async () => {});
 	});
 
-	xdescribe('Calculation validation', () => {
-		test('should calculate room area', async () => {});
+	describe('Calculation validation', () => {
+		test('should calculate room area', async () => {
+			await navigate();
+			await keyBoardTypeInputValue('roomLength', 20);
+			await keyBoardTypeInputValue('roomHeight', 10);
+			expect(await elemntVisible('resultContainer')).toBeFalsy();
+			await calculateButtonClick();
+			expect(await elemntVisible('resultContainer')).toBeTruthy();
+			expect(await elemntVisible('roomArea')).toBeTruthy();
+			expect(Number(await getElementText('roomArea'))).toBe(200);
+		});
 
 		test('should calculate room area', async () => {});
 
@@ -58,10 +67,17 @@ describe('e2e test', () => {
 	});
 });
 
+async function calculateButtonClick() {
+	await page.$eval(`[data-hook="calcButton"]`,el => el.click());
+}
+
 async function elemntVisible(key) {
 	return !!(await page.$(`[data-hook="${key}"]`));
 }
 
+async function keyBoardTypeInputValue(key, value) {
+	await page.type(`[data-hook="${key}"]`, value.toString());
+}
 async function setInputValue(key, value) {
 	await page.$eval(
 		`[data-hook="${key}"]`,
@@ -76,15 +92,20 @@ async function getInputValue(input) {
 		inputElement => inputElement.value
 	);
 }
+
 async function getNumberInputValue(input) {
 	return Number(await getInputValue(input));
 }
 
-async function getTitle() {
+async function getElementText(key) {
 	return page.$eval(
-		`[data-hook="app-title"]`,
-		inputElement => inputElement.innerText
+		`[data-hook="${key}"]`,
+		el => el.innerText
 	);
+}
+
+async function getTitle() {
+	return await getElementText('app-title');
 }
 
 async function navigate() {
